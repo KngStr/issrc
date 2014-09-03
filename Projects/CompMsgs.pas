@@ -86,11 +86,43 @@ const
   SCompilerCommandLineHelp3 = 'Command line usage:' + SNewLine +
     SNewLine +
     'compil32 /cc <script file>' + SNewLine +
+    '  Extended for /cc:' + SNewLine +
+    '    /O(+|-)' + SNewLine +
+    '    /O<path>' + SNewLine +
+    '    /F<filename>' + SNewLine +
+    '    /S<name>=<command>' + SNewLine +
     'compil32 /wizard <wizard name> <script file>' + SNewLine +
     SNewLine +
     'Examples:' + SNewLine +
     'compil32 /cc c:\isetup\sample32\sample1.iss' + SNewLine +
     'compil32 /cc "C:\Inno Setup\Sample32\My script.iss"' + SNewLine +
+    'compil32 /cc /O- "c:\isetup\samples\my script.iss"' + SNewLine +
+    'compil32 /cc /O"My Output" /F"MyProgram-1.0" /Sbyparam=$p "c:\isetup\samples\my script.iss"' + SNewLine +
+    'compil32 /wizard "My Script Wizard" c:\temp.iss';
+
+  SCompilerCommandLineHelp4 = 'Command line usage:' + SNewLine +
+    SNewLine +
+    'compil32 /cc <script file>' + SNewLine +
+    '  Extended for /cc:' + SNewLine +
+    '    /O(+|-)' + SNewLine +
+    '    /O<path>' + SNewLine +
+    '    /F<filename>' + SNewLine +
+    '    /S<name>=<command>' + SNewLine +
+    '    /D<name>[=<value>]' + SNewLine +
+    '    /$<letter>(+|-)' + SNewLine +
+    '    /P<letter>(+|-)' + SNewLine +
+    '    /I<paths>' + SNewLine +
+    '    /{#<string>' + SNewLine +
+    '    /}<string>' + SNewLine +
+    '    /V<number>' + SNewLine +
+    'compil32 /wizard <wizard name> <script file>' + SNewLine +
+    SNewLine +
+    'Examples:' + SNewLine +
+    'compil32 /cc c:\isetup\sample32\sample1.iss' + SNewLine +
+    'compil32 /cc "C:\Inno Setup\Sample32\My script.iss"' + SNewLine +
+    'compil32 /cc /O- "c:\isetup\samples\my script.iss"' + SNewLine +
+    'compil32 /cc /O"My Output" /F"MyProgram-1.0" /Sbyparam=$p "c:\isetup\samples\my script.iss"' + SNewLine +
+    'compil32 /cc /$c- /Pu+ /V4 /{#< /}> "/DLic=Trial Lic.txt" /IC:\INC;D:\INC scriptfile.iss' + SNewLine +
     'compil32 /wizard "My Script Wizard" c:\temp.iss';
 
   { Status messages }

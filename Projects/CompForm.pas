@@ -25,7 +25,7 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   UIStateForm, StdCtrls, ExtCtrls, Menus, Buttons, ComCtrls, CommCtrl,
   ScintInt, ScintEdit, ScintStylerInnoSetup, NewTabSet,
-  DebugStruct, CompInt, UxThemeISX;
+  DebugStruct, CompInt, UxThemeISX, IsppBase, IsppIntf;
 
 const
   WM_StartCommandLineCompile = WM_USER + $1000;
@@ -420,6 +420,9 @@ var
   CommandLineFilename, CommandLineWizardName: String;
   CommandLineCompile: Boolean;
   CommandLineWizard: Boolean;
+  IncludePath, Definitions, Output, OutputPath, OutputFilename, SignTool: String;
+  IsppOptions: TIsppOptions;
+  IsppMode: Boolean;
 
 function GenerateGuid: String;
 procedure InitFormFont(Form: TForm);
@@ -1673,8 +1676,26 @@ begin
     Params.CallbackProc := CompilerCallbackProc;
     Pointer(Params.AppData) := @AppData;
     Options := '';
-    for I := 0 to FSignTools.Count-1 do
-      Options := Options + AddSignToolParam(FSignTools[I]);
+    if CommandLineCompile then begin
+      if Output <> '' then
+        AppendOption(Options, 'Output', Output);
+      if OutputPath <> '' then
+        AppendOption(Options, 'OutputDir', OutputPath);
+      if OutputFilename <> '' then
+        AppendOption(Options, 'OutputBaseFilename', OutputFilename);
+
+      for I := 0 to FSignTools.Count-1 do
+        if (SignTool = '') or (Pos(UpperCase(FSignTools.Names[I]) + '=', UpperCase(SignTool)) = 0) then
+          Options := Options + AddSignToolParam(FSignTools[I]);
+      if SignTool <> '' then
+        Options := Options + AddSignToolParam(SignTool);
+
+      if IsppMode then IsppOptionsToString(Options, IsppOptions, Definitions, IncludePath);
+    end
+    else begin
+      for I := 0 to FSignTools.Count-1 do
+        Options := Options + AddSignToolParam(FSignTools[I]);
+    end;
     Params.Options := PChar(Options);
 
     AppData.Form := Self;

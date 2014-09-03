@@ -32,7 +32,8 @@ uses
   CompSignTools in 'CompSignTools.pas' {SignToolsForm},
   ScintInt in '..\Components\ScintInt.pas',
   ScintEdit in '..\Components\ScintEdit.pas',
-  ScintStylerInnoSetup in '..\Components\ScintStylerInnoSetup.pas';
+  ScintStylerInnoSetup in '..\Components\ScintStylerInnoSetup.pas',
+  CompTypes;
 
 {$R *.res}
 {$R Compil32.manifest.res}
@@ -122,8 +123,12 @@ procedure CheckParams;
 
   procedure Error;
   begin
-    MessageBox(0, SCompilerCommandLineHelp3, SCompilerFormCaption,
-      MB_OK or MB_ICONEXCLAMATION);
+    if IsppMode then
+      MessageBox(0, SCompilerCommandLineHelp4, SCompilerFormCaption,
+        MB_OK or MB_ICONEXCLAMATION)
+    else
+      MessageBox(0, SCompilerCommandLineHelp3, SCompilerFormCaption,
+        MB_OK or MB_ICONEXCLAMATION);
     Halt(1);
   end;
 
@@ -131,6 +136,8 @@ var
   P, I: Integer;
   S: String;
 begin
+  if IsppMode then InitIsppOptions(IsppOptions, Definitions, IncludePath);
+
   P := NewParamCount;
   I := 1;
   while I <= P do begin
@@ -162,6 +169,34 @@ begin
       end;
       Halt;
     end
+    else if GetParam(S, 'O') then begin
+      if S = '-' then Output := 'no'
+      else if S = '+' then Output := 'yes'
+      else OutputPath := S;
+    end
+    else if GetParam(S, 'F') then
+      OutputFilename := S
+    else if GetParam(S, 'S') then begin
+      SignTool := S;
+      if Pos('=', SignTool) = 0 then
+        Error;
+    end else if IsppMode and GetParam(S, 'D') then begin
+      if (Pos(';', S) > 0) or (Pos(' ', S) > 0) then
+        S := AnsiQuotedStr(S, '"');
+      Definitions := Definitions + ';' + S;
+    end
+    else if IsppMode and GetParam(S, 'I') then begin
+      IncludePath := IncludePath + ';' + S;
+    end
+    else if IsppMode and GetParam(S, '{#') then begin
+      if S <> '' then IsppOptions.InlineStart := AnsiString(S);
+    end
+    else if IsppMode and GetParam(S, '}') then begin
+      if S <> '' then IsppOptions.InlineEnd := AnsiString(S);
+    end
+    else if IsppMode and GetParam(S, 'V') then begin
+      if S <> '' then IsppOptions.VerboseLevel := StrToIntDef(S, 0);
+    end
     else if (S = '') or (S[1] = '/') or (CommandLineFilename <> '') then
       Error
     else
@@ -180,6 +215,7 @@ begin
   SetAppUserModelID;
   CreateMutexes;
   Application.Initialize;
+  IsppMode := FileExists(ExtractFilePath(NewParamStr(0)) + 'ispp.dll');
   CheckParams;
   RegisterApplicationRestart;
 
