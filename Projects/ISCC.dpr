@@ -405,6 +405,7 @@ procedure ProcessCommandLine;
     WriteStdErr('  /S<name>=<command> Sets a SignTool with the specified name and command');
     WriteStdErr('  /Q                 Quiet compile (print error messages only)');
     WriteStdErr('  /Qp                Enable quiet compile while still displaying progress');
+    WriteStdErr('  /Qi                Enable quiet compile while still displaying important message');
     if IsppMode then begin
       WriteStdErr('  /D<name>[=<value>] Emulate #define public <name> <value>');
       WriteStdErr('  /$<letter>(+|-)    Emulate #pragma option -<letter>(+|-)');
