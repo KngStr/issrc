@@ -17,12 +17,11 @@ rem  -Create ANSI Inno Setup installer
 rem  -Compile Unicode Inno Setup
 rem  -Create Unicode Inno Setup installer
 rem
-rem  Once done the 2 installers can be found in Output and additionally 2 ISCC
-rem  files are stored there for later use while preparing an ISPack release
+rem  Once done the 2 installers can be found in Output
 
 setlocal
 
-set VER=5.5.5
+set VER=5.5.7-dev
 
 echo Building Inno Setup %VER%...
 echo.
@@ -55,7 +54,7 @@ echo - Setup.exe
 if exist .\setup-sign.bat (
   call .\setup-sign.bat
 ) else (
-  files\isppcc setup.iss /q /DNOSIGNTOOL
+  files\iscc setup.iss /q /DNOSIGNTOOL
 )
 if errorlevel 1 goto failed
 echo - Copying ISCC for ISPack
@@ -79,7 +78,7 @@ echo - Setup.exe
 if exist .\setup-sign.bat (
   call .\setup-sign.bat
 ) else (
-  files\isppcc setup.iss /q /DNOSIGNTOOL
+  files\iscc setup.iss /q /DNOSIGNTOOL
 )
 if errorlevel 1 goto failed
 echo - Copying ISCC for ISPack

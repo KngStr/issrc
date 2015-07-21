@@ -1,8 +1,8 @@
 Inno Setup
 ==========
 
-Copyright (C) 1997-2014 Jordan Russell. All rights reserved.  
-Portions Copyright (C) 2000-2014 Martijn Laan. All rights reserved.  
+Copyright (C) 1997-2015 Jordan Russell. All rights reserved.  
+Portions Copyright (C) 2000-2015 Martijn Laan. All rights reserved.  
 For conditions of distribution and use, see LICENSE.TXT.
 
 Source code README
@@ -167,9 +167,6 @@ performs all (un)installation-related tasks.
 Setup program into the user's TEMP directory and runs it from there. It also
 displays the "This will install..." and /HELP message boxes.
 
-**ISPP\ISPPCC** - This is Inno Setup's ISCC command-line front-end with extra
-preprocessor related parameters added.
-
 **ISPP\ISPP** - This is a DLL implementing Inno Setup's preprocessor interface
 
 How do the projects link together?
@@ -183,7 +180,7 @@ How do the projects link together?
   clauses of the projects and units if you aren't sure if a project uses a
   particular unit.
 
-- ISPP and ISPPCC use various copies of other Inno Setup files. To synch these
+- ISPP uses various copies of other Inno Setup files. To synch these
   run synch-isfiles.bat.
 
 5. Source code tips
@@ -257,11 +254,12 @@ by Visual Studio 2005 from the Projects\lzma2\Encoder directory.
 **Files\isscint.dll** - Compiled by Visual Studio 2005 from Scintila 2.22 source
 code with scintilla-2.22-patch.txt applied.
 
-**Projects\\_shfolder.res** - shfolder.dll from a fresh install of IE 5.5 SP2 on
+**Projects\_shfolder.res** - shfolder.dll from a fresh install of IE 5.5 SP2 on
 NT 4.0 stored in a compiled resource file.
 
-**Projects\HelperEXEs.res** - Compiled by Visual Studio 2005 from the
-Projects\Helper directory and then stored in a compiled resource file.
+**Projects\Helper\x64\Release\Helper.exe**, **Projects\HelperEXEs.res** -
+Compiled by Visual Studio 2005 from the Projects\Helper directory and then
+stored in a compiled resource file.
 
 **Projects\LzmaDecode\LzmaDecodeInno.obj** - See Projects\LzmaDecode\compiling.txt.
 
@@ -270,7 +268,7 @@ See Projects\lzma2\Decoder\compiling.txt.
 
 **ishelp\ISHelpGen\ISHelpGen.exe** - See ishelp\ISHelpGen\compile.bat
 
-**Examples\MyProg.exe**, **Examples\MyProg-IA64.exe**, **Examples\MyProg-x64.exe** -
+**Examples\MyProg.exe**, **Examples\MyProg-x64.exe** -
 Compiled by Visual Studio 2005 from the Examples\MyProg directory.
 
 7. Inno Setup-specific editing guidelines for the help files

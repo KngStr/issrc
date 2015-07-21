@@ -2,7 +2,7 @@ unit Compile;
 
 {
   Inno Setup
-  Copyright (C) 1997-2014 Jordan Russell
+  Copyright (C) 1997-2015 Jordan Russell
   Portions by Martijn Laan
   For conditions of distribution and use, see LICENSE.TXT.
 
@@ -146,6 +146,7 @@ type
     ssRestartIfNeededByRun,
     ssSetupIconFile,
     ssSetupLogging,
+    ssSetupMutex,
     ssShowComponentSizes,
     ssShowLanguageDialog,
     ssShowTasksTreeLines,
@@ -825,6 +826,8 @@ end;
 procedure UpdateSetupPEHeaderFields(const F: TCustomFile;
   const IsTSAware: Boolean);
 const
+  IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE = $0040;
+  IMAGE_DLLCHARACTERISTICS_NX_COMPAT = $0100;
   IMAGE_DLLCHARACTERISTICS_TERMINAL_SERVER_AWARE = $8000;
   OffsetOfImageVersion = $2C;
   OffsetOfDllCharacteristics = $46;
@@ -862,6 +865,7 @@ begin
         F.Seek(Ofs + OffsetOfDllCharacteristics);
         if F.Read(DllChars, SizeOf(DllChars)) = SizeOf(DllChars) then begin
           OrigDllChars := DllChars;
+          DllChars := DllChars or IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE or IMAGE_DLLCHARACTERISTICS_NX_COMPAT;
           if IsTSAware then
             DllChars := DllChars or IMAGE_DLLCHARACTERISTICS_TERMINAL_SERVER_AWARE
           else
@@ -4000,6 +4004,9 @@ begin
     ssSetupLogging: begin
         SetSetupHeaderOption(shSetupLogging);
       end;
+    ssSetupMutex: begin
+        SetupHeader.SetupMutex := Trim(Value);
+      end;
     ssShowComponentSizes: begin
         SetSetupHeaderOption(shShowComponentSizes);
       end;
@@ -4707,6 +4714,9 @@ begin
   TaskEntries.Add(NewTaskEntry);
 end;
 
+const
+  FILE_ATTRIBUTE_NOT_CONTENT_INDEXED = $00002000;
+
 procedure TSetupCompiler.EnumDirs(const Line: PChar; const Ext: Integer);
 type
   TParam = (paFlags, paName, paAttribs, paPermissions, paComponents, paTasks,
@@ -4732,8 +4742,8 @@ const
   Flags: array[0..4] of PChar = (
     'uninsneveruninstall', 'deleteafterinstall', 'uninsalwaysuninstall',
     'setntfscompression', 'unsetntfscompression');
-  AttribsFlags: array[0..2] of PChar = (
-    'readonly', 'hidden', 'system');
+  AttribsFlags: array[0..3] of PChar = (
+    'readonly', 'hidden', 'system', 'notcontentindexed');
   AccessMasks: array[0..2] of TNameAndAccessMask = (
     (Name: 'full'; Mask: $1F01FF),
     (Name: 'modify'; Mask: $1301BF),
@@ -4772,6 +4782,7 @@ begin
           0: Attribs := Attribs or FILE_ATTRIBUTE_READONLY;
           1: Attribs := Attribs or FILE_ATTRIBUTE_HIDDEN;
           2: Attribs := Attribs or FILE_ATTRIBUTE_SYSTEM;
+          3: Attribs := Attribs or FILE_ATTRIBUTE_NOT_CONTENT_INDEXED;
         end;
 
       { Permissions }
@@ -5610,8 +5621,8 @@ const
     'uninsnosharedfileprompt', 'createallsubdirs', '32bit', '64bit',
     'solidbreak', 'setntfscompression', 'unsetntfscompression',
     'sortfilesbyname', 'gacinstall');
-  AttribsFlags: array[0..2] of PChar = (
-    'readonly', 'hidden', 'system');
+  AttribsFlags: array[0..3] of PChar = (
+    'readonly', 'hidden', 'system', 'notcontentindexed');
   AccessMasks: array[0..2] of TNameAndAccessMask = (
     (Name: 'full'; Mask: $1F01FF),
     (Name: 'modify'; Mask: $1301BF),
@@ -5649,6 +5660,7 @@ type
       'COMCAT.DLL', 'MSVBVM50.DLL', 'MSVBVM60.DLL', 'OLEAUT32.DLL',
       'OLEPRO32.DLL', 'STDOLE2.TLB');
   var
+    SourceFileDir, SysWow64Dir: String;
     I: Integer;
   begin
     if AllowUnsafeFiles then
@@ -5657,9 +5669,13 @@ type
       { Files that must NOT be deployed to the user's System directory }
       { Any DLL deployed from system's own System directory }
       if not ExternalFile and
-         (CompareText(PathExtractExt(Filename), '.DLL') = 0) and
-         (PathCompare(PathExpand(PathExtractDir(SourceFile)), GetSystemDir) = 0) then
+         (CompareText(PathExtractExt(Filename), '.DLL') = 0) then begin
+        SourceFileDir := PathExpand(PathExtractDir(SourceFile));
+        SysWow64Dir := GetSysWow64Dir;
+        if (PathCompare(SourceFileDir, GetSystemDir) = 0) or
+           ((SysWow64Dir <> '') and ((PathCompare(SourceFileDir, SysWow64Dir) = 0))) then
         AbortCompileOnLine(SCompilerFilesSystemDirUsed);
+      end;
       { CTL3D32.DLL }
       if not ExternalFile and
          (CompareText(Filename, 'CTL3D32.DLL') = 0) and
@@ -6266,6 +6282,7 @@ begin
                    0: Attribs := Attribs or FILE_ATTRIBUTE_READONLY;
                    1: Attribs := Attribs or FILE_ATTRIBUTE_HIDDEN;
                    2: Attribs := Attribs or FILE_ATTRIBUTE_SYSTEM;
+                   3: Attribs := Attribs or FILE_ATTRIBUTE_NOT_CONTENT_INDEXED;
                  end;
 
                { Permissions }
@@ -7813,6 +7830,13 @@ var
       end;
     end;
 
+  const
+    StatusFilesStoringOrCompressingVersionStrings: array [Boolean] of String = (
+     SCompilerStatusFilesStoringVersion,
+     SCompilerStatusFilesCompressingVersion);
+    StatusFilesStoringOrCompressingStrings: array [Boolean] of String = (
+     SCompilerStatusFilesStoring,
+     SCompilerStatusFilesCompressing);
   var
     CH: TCompressionHandler;
     ChunkCompressed: Boolean;
@@ -7851,12 +7875,12 @@ var
       for I := 0 to FileLocationEntries.Count-1 do begin
         FL := FileLocationEntries[I];
         if foVersionInfoValid in FL.Flags then
-          AddStatus(Format(SCompilerStatusFilesCompressingVersion,
+          AddStatus(Format(StatusFilesStoringOrCompressingVersionStrings[foChunkCompressed in FL.Flags],
             [FileLocationEntryFilenames[I],
              LongRec(FL.FileVersionMS).Hi, LongRec(FL.FileVersionMS).Lo,
              LongRec(FL.FileVersionLS).Hi, LongRec(FL.FileVersionLS).Lo]))
         else
-          AddStatus(Format(SCompilerStatusFilesCompressing,
+          AddStatus(Format(StatusFilesStoringOrCompressingStrings[foChunkCompressed in FL.Flags],
             [FileLocationEntryFilenames[I]]));
         CallIdleProc;
 
@@ -8341,6 +8365,8 @@ begin
     AppVersionHasConsts := CheckConst(SetupHeader.AppVersion, SetupHeader.MinVersion, []);
     LineNumber := SetupDirectiveLines[ssAppMutex];
     CheckConst(SetupHeader.AppMutex, SetupHeader.MinVersion, []);
+    LineNumber := SetupDirectiveLines[ssSetupMutex];
+    CheckConst(SetupHeader.SetupMutex, SetupHeader.MinVersion, []);
     LineNumber := SetupDirectiveLines[ssDefaultDirName];
     CheckConst(SetupHeader.DefaultDirName, SetupHeader.MinVersion, []);
     if SetupHeader.DefaultDirName = '' then begin
@@ -8867,8 +8893,8 @@ begin
     AddStatus('');
     for I := 0 to WarningsList.Count-1 do
       AddStatus(SCompilerStatusWarning + WarningsList[I]);
-    asm jmp @1; db 0,'Inno Setup Compiler, Copyright (C) 1997-2014 Jordan Russell, '
-                  db 'Portions Copyright (C) 2000-2014 Martijn Laan',0; @1: end;
+    asm jmp @1; db 0,'Inno Setup Compiler, Copyright (C) 1997-2015 Jordan Russell, '
+                  db 'Portions Copyright (C) 2000-2015 Martijn Laan',0; @1: end;
     { Note: Removing or modifying the copyright text is a violation of the
       Inno Setup license agreement; see LICENSE.TXT. }
   finally

@@ -21,15 +21,28 @@
 
 <div class="bluehead"><span class="head1">Inno Setup 5</span><br /><span class="head2">Revision History</span></div>
 
-<p>Copyright &copy; 1997-2014 <a href="http://www.jrsoftware.org/">Jordan Russell</a>. All rights reserved.<br />
-Portions Copyright &copy; 2000-2014 Martijn Laan. All rights reserved.<br />
+<p>Copyright &copy; 1997-2015 <a href="http://www.jrsoftware.org/">Jordan Russell</a>. All rights reserved.<br />
+Portions Copyright &copy; 2000-2015 Martijn Laan. All rights reserved.<br />
 For conditions of distribution and use, see <a href="http://www.jrsoftware.org/files/is/license.txt">LICENSE.TXT</a>.
 </p>
 
-<p><a name="5.5.6"></a><span class="ver">5.5.6-dev </span><span class="date">(?)</span></p>
+<p><a name="5.5.7"></a><span class="ver">5.5.7-dev </span><span class="date">(?)</span></p>
 <ul>
+<li>The <tt>Attribs</tt> parameter of a [Files] or [Dir] entry may now also include <tt>notcontentindexed</tt> to specify that the file or directory is not to be indexed by the content indexing service.</li>
+<li>Pascal Scripting change: function <tt>RegQueryBinaryValue</tt> can now be used to query any type of registry value and not just <tt>REG_BINARY</tt>-type values.</li>
+<li>The Setup and Uninstall programs are now marked as DEP and ASLR compatible.</li>
+<li>Minor tweaks.</li>
+</ul>
+
+<p><a name="5.5.6"></a><span class="ver">5.5.6 </span><span class="date">(2015-07-16)</span></p>
+<ul>
+<li>Added the Windows 10 "compatibility" section to the various manifest resources used by Inno Setup. This enables any check for the operating system version to get the real version number (10.0) instead of getting the same version number as it did in Windows 8.1 (6.3).</li>
 <li>Added new [Setup] section directive: <tt>SignToolRetryCount</tt>, which defaults to <tt>2</tt>. Specifies the number of times the Setup Compiler should automatically retry digital signing on any errors.</li>
+<li>Added new [Setup] section directive: <tt>SetupMutex</tt>. Can be used to prevent Setup from running while Setup is already running.</li>
 <li><i>Fix:</i> Console-mode compiler (ISCC) change: Renamed /DO and /EO command line parameters to /O- and /O+ to avoid possible conflicts with /D.</li>
+<li>Pascal Scripting change: Unicode Inno Setup: Added new functions <tt>VarIsClear</tt> and <tt>UnpinShellLink</tt>.</li>
+<li>Inno Setup Preprocessor (ISPP) change: Added new function <tt>ForceDirectories</tt>.</li>
+<li>Unicode [Code] based on RemObjects Pascal Script Git commit db0d6f521113a31b34a76aeefd79fb148a9c4bfd.</li>
 <li>Various documentation improvements. Contributed by <a href="https://github.com/jogo-" target="_blank">jogo-</a> via <a href="https://github.com/jrsoftware" target="_blank">GitHub</a>.</li>
 <li>Minor tweaks.</li>
 </ul>
@@ -54,7 +67,7 @@ For conditions of distribution and use, see <a href="http://www.jrsoftware.org/f
 </li>
 <li>Inno Setup Preprocessor (ISPP) changes:
 <ul>
-  <li>Added function <tt>DeleteFileNow</tt>.</li>
+  <li>Added new function <tt>DeleteFileNow</tt>.</li>
   <li>Added 64-bit support to function <tt>ReadReg</tt>.</li>
 </ul>
 </li>
